@@ -1,7 +1,7 @@
 import random
 
 # Define the game elements
-suspects = ["Colonel Mustard", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Miss Scarlet", "Mrs. White", "Orchid"]
+suspects = ["Colonel Mustard", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Miss Scarlet", "Mrs. White"]
 weapons = ["Candlestick", "Dagger", "Lead Pipe", "Revolver", "Rope", "Wrench"]
 rooms = ["Kitchen", "Ballroom", "Conservatory", "Dining Room", "Billiard Room", "Library", "Lounge", "Hall", "Study"]
 
@@ -34,27 +34,29 @@ def get_items_from_input(category):
         item = input(f"Enter a {category[:-1]} (or press Enter to finish): ")
         if item == "":
             break
-        if item not in category:
+        if item not in eval(category):
             print(f"Invalid {category[:-1]}. Please try again.")
         else:
             items.append(item)
     return items
+
+# Function to display the remaining possibilities
+def display_possibilities():
+    print("\nRemaining possibilities:")
+    for category, items in bot_knowledge.items():
+        print(f"{category.capitalize()}:", ", ".join(sorted(items)))
 
 # Game loop
 print("Welcome to Cluedo!")
 print("You will provide information to the bot, and the bot will suggest actions.")
 
 while True:
-    # Display the bot's current knowledge
-    print("\nBot's current knowledge:")
-    print("Suspects:", ", ".join(sorted(bot_knowledge["suspects"])))
-    print("Weapons:", ", ".join(sorted(bot_knowledge["weapons"])))
-    print("Rooms:", ", ".join(sorted(bot_knowledge["rooms"])))
+    display_possibilities()
 
     # Get information from the user
     print("\nEnter the information you have (or press Enter if no new information):")
     for category in ["suspects", "weapons", "rooms"]:
-        items = get_items_from_input(eval(category))
+        items = get_items_from_input(category)
         if items:
             update_bot_knowledge(category, items)
 
@@ -66,17 +68,15 @@ while True:
             "room": list(bot_knowledge["rooms"])[0]
         }
         print("\nThe bot is ready to make an accusation:")
-        print("Suspect:", accusation["suspect"])
-        print("Weapon:", accusation["weapon"])
-        print("Room:", accusation["room"])
+        for category, item in accusation.items():
+            print(f"{category.capitalize()}:", item)
         break
     else:
         # Get a suggestion from the bot
         suggestion = bot_suggestion()
         print("\nBot's suggestion:")
-        print("Suspect:", suggestion["suspect"])
-        print("Weapon:", suggestion["weapon"])
-        print("Room:", suggestion["room"])
+        for category, item in suggestion.items():
+            print(f"{category.capitalize()}:", item)
 
         # Get feedback from the user
         feedback = input("Is the suggestion correct? (yes/no): ")
@@ -87,3 +87,4 @@ while True:
             print("The bot's suggestion is incorrect. Please provide more information.")
 
 print("\nGame over!")
+
