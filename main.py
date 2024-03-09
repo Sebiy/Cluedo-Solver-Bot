@@ -12,20 +12,30 @@ bot_knowledge = {
     "rooms": set(rooms)
 }
 
+# Initialize the game state
+game_state = {
+    "suspect": None,
+    "weapon": None,
+    "room": None
+}
+
 # Function to update the bot's knowledge based on user input
 def update_bot_knowledge(category, items):
     bot_knowledge[category] -= set(items)
 
 # Function to get a suggestion from the bot
 def bot_suggestion():
-    suspect = random.choice(list(bot_knowledge["suspects"]))
-    weapon = random.choice(list(bot_knowledge["weapons"]))
-    room = random.choice(list(bot_knowledge["rooms"]))
-    return {"suspect": suspect, "weapon": weapon, "room": room}
+    suggestion = {}
+    for category in ["suspect", "weapon", "room"]:
+        if game_state[category] is None:
+            suggestion[category] = random.choice(list(bot_knowledge[category + "s"]))
+        else:
+            suggestion[category] = game_state[category]
+    return suggestion
 
 # Function to check if the bot has enough information to make an accusation
 def can_make_accusation():
-    return len(bot_knowledge["suspects"]) == 1 and len(bot_knowledge["weapons"]) == 1 and len(bot_knowledge["rooms"]) == 1
+    return all(game_state.values())
 
 # Function to get a list of items from user input
 def get_items_from_input(category):
@@ -46,12 +56,19 @@ def display_possibilities():
     for category, items in bot_knowledge.items():
         print(f"{category.capitalize()}:", ", ".join(sorted(items)))
 
+# Function to display the game state
+def display_game_state():
+    print("\nCurrent game state:")
+    for category, item in game_state.items():
+        print(f"{category.capitalize()}:", item if item else "Unknown")
+
 # Game loop
 print("Welcome to Cluedo!")
 print("You will provide information to the bot, and the bot will suggest actions.")
 
 while True:
     display_possibilities()
+    display_game_state()
 
     # Get information from the user
     print("\nEnter the information you have (or press Enter if no new information):")
@@ -59,16 +76,13 @@ while True:
         items = get_items_from_input(category)
         if items:
             update_bot_knowledge(category, items)
+            if len(items) == 1:
+                game_state[category[:-1]] = items[0]
 
     # Check if the bot can make an accusation
     if can_make_accusation():
-        accusation = {
-            "suspect": list(bot_knowledge["suspects"])[0],
-            "weapon": list(bot_knowledge["weapons"])[0],
-            "room": list(bot_knowledge["rooms"])[0]
-        }
         print("\nThe bot is ready to make an accusation:")
-        for category, item in accusation.items():
+        for category, item in game_state.items():
             print(f"{category.capitalize()}:", item)
         break
     else:
@@ -79,12 +93,17 @@ while True:
             print(f"{category.capitalize()}:", item)
 
         # Get feedback from the user
-        feedback = input("Is the suggestion correct? (yes/no): ")
+        feedback = input("Is the suggestion correct? (yes/no/partial): ")
         if feedback.lower() == "yes":
             print("\nThe bot has solved the mystery!")
             break
+        elif feedback.lower() == "partial":
+            print("Please provide more information about the correct parts of the suggestion.")
+            for category in ["suspect", "weapon", "room"]:
+                correct = input(f"Is the {category} correct? (yes/no): ")
+                if correct.lower() == "yes":
+                    game_state[category] = suggestion[category]
         else:
             print("The bot's suggestion is incorrect. Please provide more information.")
 
 print("\nGame over!")
-
